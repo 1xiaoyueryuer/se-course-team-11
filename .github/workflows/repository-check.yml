@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
-    branches: [main]
+    branches: [main, 'member/*']
 
 permissions:
   contents: read
@@ -27,7 +27,11 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
         run: python scripts/check_repository.py --base "$BASE_SHA" --head "$HEAD_SHA"
-      - name: Check main conventions
+      - name: Check pushed branch conventions
         if: github.event_name == 'push'
-        run: python scripts/check_repository.py --check-head
+        env:
+          PUSH_BRANCH: ${{ github.ref_name }}
+        run: python scripts/check_repository.py --check-head --branch "$PUSH_BRANCH"

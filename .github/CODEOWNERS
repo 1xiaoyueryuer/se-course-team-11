@@ -1,0 +1,3 @@
+# Default reviewer; enforcement requires branch protection and write permission.
+# Replace/extend after the A/B/C/D account mapping and independent reviewer are confirmed.
+* @1xiaoyueryuer

@@ -1,3 +1,4 @@
-# Default reviewer; enforcement requires branch protection and write permission.
-# Replace/extend after the A/B/C/D account mapping and independent reviewer are confirmed.
+# D is the confirmed project lead and first reviewer.
+# A second authorized Code Owner is pending; D cannot approve D's own PR.
+# Additional owners mean any listed owner can satisfy GitHub's owner approval.
 * @1xiaoyueryuer

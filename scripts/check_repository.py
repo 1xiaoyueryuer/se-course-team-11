@@ -11,6 +11,18 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 TITLE = re.compile(r"^(前端|后端|知识库|测试|文档|工程)：\s*(\S.*)$")
 TRIVIAL = {"更新", "修改", "修复", "调整", "完善", "更新文档", "修改一下", "修复一些问题"}
+MEMBER_BRANCHES = {"member/a", "member/b", "member/c", "member/d"}
+REPOSITORY = "1xiaoyueryuer/se-course-team-11"
+
+
+def branch_errors(branch, *, pull_request=False, head_repository=None):
+    allowed = MEMBER_BRANCHES if pull_request else MEMBER_BRANCHES | {"main"}
+    errors = []
+    if branch not in allowed:
+        errors.append(f"分支 {branch!r} 不符合固定个人分支约定")
+    if pull_request and head_repository != REPOSITORY:
+        errors.append("团队 PR 必须来自本仓库已分配的固定成员分支")
+    return errors
 
 
 def title_error(title):
@@ -69,6 +81,7 @@ def main():
     parser.add_argument("--base", help="PR base commit; checks every commit in base..head")
     parser.add_argument("--head", default="HEAD")
     parser.add_argument("--check-head", action="store_true", help="Check the current commit title")
+    parser.add_argument("--branch", help="Explicit branch for detached CI checkouts")
     args = parser.parse_args()
     try:
         # Include untracked nonignored files for useful local precommit checks.
@@ -77,6 +90,12 @@ def main():
         # A staged deletion should not be treated as a present local document.
         paths = {name for name in paths if (ROOT / name).is_file()}
         errors = file_errors(paths)
+        pr_branch = os.environ.get("PR_HEAD_BRANCH")
+        branch = pr_branch if pr_branch is not None else (args.branch or git("branch", "--show-current").strip())
+        errors.extend(branch_errors(
+            branch, pull_request=pr_branch is not None,
+            head_repository=os.environ.get("PR_HEAD_REPOSITORY"),
+        ))
         titles = []
         if args.base:
             if not re.fullmatch(r"[a-fA-F0-9]{40}", args.base):
@@ -102,8 +121,8 @@ def main():
         for error in errors:
             print(f"错误：{error}", file=sys.stderr)
         return 1
-    print("仓库文档位置、功能方案配对及指定范围标题检查通过。")
-    print("此检查不判断功能完整性、测试真实性或人工审核状态。")
+    print("固定分支、文档位置、功能方案配对及指定范围标题检查通过。")
+    print("此检查不判断成员写权限、修改范围授权、功能完整性或人工审核状态。")
     return 0
 
 
